@@ -8,5 +8,4 @@ set +x
 
 echo 'Testing that the React'
 echo 'application renders satisfactorily. invoking the test ...'
-set -x
 #npm test
