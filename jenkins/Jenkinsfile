@@ -11,6 +11,7 @@ pipeline {
     stages {
         stage('Build') {
             steps {
+                sh 'npm config set unsafe-perm true'
                 sh 'mkdir -p node_modules/.npm'
                 sh 'chmod -R 777 node_modules/.npm'
                 sh 'npm install --loglevel=verbose'
