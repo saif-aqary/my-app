@@ -56,9 +56,12 @@ pipeline {
         script {
             // Pull the latest Docker image from Docker Hub
             docker.image("${DOCKER_HUB_REPO}:${BUILD_NUMBER}").pull()
-
+            
             // Deploy the image to Kubernetes
-            sh 'kubectl apply -f kubernetes/'
+            withKubeConfig([credentialsId: 'minikube', serverUrl: 'https://127.0.0.1:52413']) {
+                sh 'kubectl apply -f kubernetes/'
+            }
+            
 
             // Get the external IP address of the service
             def serviceIP = sh(script: 'kubectl get svc my-app -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"', returnStdout: true).trim()
