@@ -44,7 +44,7 @@ pipeline {
             steps {
                 script {
                     // Assuming kubectl is configured in your Jenkins environment
-                    sh 'kubectl apply -f kubernetes/'
+                    sh 'kubectl apply -f kubernetes/  --validate=false'
                 }
             }
         }
