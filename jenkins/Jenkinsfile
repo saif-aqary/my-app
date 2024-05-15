@@ -58,11 +58,11 @@ pipeline {
             docker.image("${DOCKER_HUB_REPO}:${BUILD_NUMBER}").pull()
             
             // Deploy the image to Kubernetes
-            withKubeConfig([credentialsId: 'minikube', serverUrl: 'https://192.168.49.2:31000']) {
-                sh 'kubectl apply -f kubernetes/ --validate=false'
-            }
+            withCredentials([
+                string(credentialsId: 'my_kubernetes', variable: 'api_token')]) {
+                    sh 'kubectl --token $api_token --server https://192.168.49.2:8443  --insecure-skip-tls-verify=true apply -f kubernetes/ '
+                    }
             
-
             // Get the external IP address of the service
             def serviceIP = sh(script: 'kubectl get svc my-app -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"', returnStdout: true).trim()
 
