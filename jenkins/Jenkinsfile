@@ -64,12 +64,12 @@ pipeline {
                     }
             
             // Get the external IP address of the service
-            def serviceIP = sh(script: 'kubectl get svc my-app -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"', returnStdout: true).trim()
+            // def serviceIP = sh(script: 'kubectl get svc my-app -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"', returnStdout: true).trim()
+            def serviceIP = '192.168.49.2'
             echo 'service is up at '
-            sh 'minikube service my-app --url'
             // Construct the static service URL
-            // def serviceURL = "http://${serviceIP}:3000" // Assuming your service is exposed on port 3000
-            // echo "Service is deployed at: ${serviceURL}"
+            def serviceURL = "https://${serviceIP}:31000" // Assuming your service is exposed on port 3000
+            echo "Service is deployed at: ${serviceURL}"
 
             // Wait for user input to finish testing
             input message: 'Finished using the web service? (Click "Proceed" to continue)'
