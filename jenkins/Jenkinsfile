@@ -58,7 +58,7 @@ pipeline {
             docker.image("${DOCKER_HUB_REPO}:${BUILD_NUMBER}").pull()
             
             // Deploy the image to Kubernetes
-            withKubeConfig([credentialsId: 'minikube', serverUrl: 'https://127.0.0.1:52413']) {
+            withKubeConfig([credentialsId: 'minikube', serverUrl: 'https://192.168.49.2:52413']) {
                 sh 'kubectl apply -f kubernetes/ --validate=false'
             }
             
