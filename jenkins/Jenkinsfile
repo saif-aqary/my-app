@@ -47,7 +47,7 @@ pipeline {
                     sh 'kubectl config set-cluster minikube --server=https://192.168.49.2:8443 --insecure-skip-tls-verify=true'
                     sh 'kubectl config set-context minikube --cluster=minikube --user=minikube'
                     sh 'kubectl config use-context minikube'
-                    sh 'kubectl apply -f kubernetes/  --validate=false'
+                    sh 'kubectl apply -f kubernetes/ '
                 }
             }
         }
