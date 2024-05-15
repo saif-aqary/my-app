@@ -1,13 +1,16 @@
 pipeline {
-    agent {
-        docker {
-            image 'node:lts-slim'
-            args '-p 3000:3000'
-        }
-    }
+    agent any
+    // agent {
+    //     docker {
+    //         image 'node:lts-slim'
+    //         args '-p 3000:3000'
+    //     }
+    // }
     environment {
         CI = 'true'
-        NPM_CONFIG_CACHE = "${WORKSPACE}/.npm"   
+        NPM_CONFIG_CACHE = "${WORKSPACE}/.npm"
+        DOCKER_HUB_REPO = 'aqarysaif/my-app'
+        registryId = 'dockerhub_id'   
     }
     stages {
         stage('Build') {
@@ -21,14 +24,60 @@ pipeline {
                 sh './jenkins/scripts/test.sh'
             }
         }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    docker.build("${DOCKER_HUB_REPO}:${BUILD_NUMBER}")
+                }
+            }
+        }
+        stage('Push Docker Image') {
+            steps {
+                script {
+                    docker.withRegistry('', registryId) {
+                        docker.image("${DOCKER_HUB_REPO}:${BUILD_NUMBER}").push()
+                    }
+                }
+            }
+        }
+        stage('Deploy to Kubernetes') {
+            steps {
+                script {
+                    // Assuming kubectl is configured in your Jenkins environment
+                    sh 'kubectl apply -f kubernetes/'
+                }
+            }
+        }
         stage('Deliver') {
             steps {
-                sh 'chmod a+x ./jenkins/scripts/deliver.sh'
-                sh './jenkins/scripts/deliver.sh'
-                input message: 'Finished using the web site? (Click "Proceed" to continue)'
-                sh 'chmod a+x ./jenkins/scripts/kill.sh'
-                sh './jenkins/scripts/kill.sh'
-            }
+        script {
+            // Pull the latest Docker image from Docker Hub
+            docker.image("${DOCKER_HUB_REPO}:${BUILD_NUMBER}").pull()
+
+            // Deploy the image to Kubernetes
+            sh 'kubectl apply -f kubernetes/'
+
+            // Get the external IP address of the service
+            def serviceIP = sh(script: 'kubectl get svc my-app -o=jsonpath="{.status.loadBalancer.ingress[0].ip}"', returnStdout: true).trim()
+
+            // Construct the static service URL
+            def serviceURL = "http://${serviceIP}:3000" // Assuming your service is exposed on port 3000
+            echo "Service is deployed at: ${serviceURL}"
+
+            // Wait for user input to finish testing
+            input message: 'Finished using the web service? (Click "Proceed" to continue)'
+
+            // Destroy the resources
+            sh 'kubectl delete -f kubernetes/'
+        }
+    }
+            // steps {
+            //     sh 'chmod a+x ./jenkins/scripts/deliver.sh'
+            //     sh './jenkins/scripts/deliver.sh'
+            //     input message: 'Finished using the web site? (Click "Proceed" to continue)'
+            //     sh 'chmod a+x ./jenkins/scripts/kill.sh'
+            //     sh './jenkins/scripts/kill.sh'
+            // }
         }
     }
 }
